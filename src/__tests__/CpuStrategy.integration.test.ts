@@ -258,7 +258,7 @@ describe('CpuStrategy - Integration Tests (Phase 9, T056-T060)', () => {
     it('Should maintain consistency across all CPU players', () => {
       const cpuPlayers = gameState.players.filter((p) => p.isCpu);
 
-      cpuPlayers.forEach((player, idx) => {
+      cpuPlayers.forEach((player) => {
         const actualIndex = gameState.players.indexOf(player);
         gameState.currentPlayerIndex = actualIndex;
         const action = CpuStrategy.decideAction(gameState);

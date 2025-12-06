@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { GameState, GamePhase } from '../model/GameState';
+import { GamePhase } from '../model/GameState';
 import { createMockPlayer } from './helpers';
 
 describe('Phase 1: Draw Tracking - Unit & Integration Tests', () => {
