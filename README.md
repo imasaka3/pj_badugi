@@ -2,13 +2,13 @@
 
 ## Overview
 This is a single-player Badugi Poker web application built with Phaser and TypeScript.
-You play against 6 CPU opponents in a Ring Game format.
+You play against 6 CPU opponents in a Tournament format.
 
 ## Features
 - **Game Rules**: Badugi (4-card lowball), Fixed Limit Betting, 5-bet cap.
 - **Multiplayer Simulation**: 1 Human vs 6 CPU opponents.
 - **Tournament Mode**: Blinds increase over time (configurable via `src/assets/blinds.tsv`).
-- **CPU AI**: Implements strategy for Pre-draw, Draw, and Betting phases.
+- **CPU AI**: Implements strategy for Pre-draw, Draw, and Betting phases (heuristic. Very Simple.).
 - **Hand History**: Detailed logs with round-by-round actions.
 - **Architecture**: Vite + Phaser + TypeScript.
 
@@ -26,9 +26,16 @@ You play against 6 CPU opponents in a Ring Game format.
 
 ## How to Play
 1.  **Start Game**: Click "START GAME" on the main menu.
-2.  **Betting Phase**: Fold, Check/Call, or Bet/Raise within 30 seconds.
-3.  **Draw Phase**: Select cards to discard and click "Draw", or "Stand Pat" to keep your hand.
-4.  **Showdown**: Lowest Badugi hand wins.
+2.  **Logs**: You can see the hand history in the logs.
 
 ## Configuration
 - **Blinds**: Edit `src/assets/blinds.tsv` to adjust blind levels and duration.
+
+## License
+MIT
+
+## Deployment
+
+This app is deployed to GitHub Pages. The deployment workflow is defined in `.github/workflows/deploy.yml`.
+
+
