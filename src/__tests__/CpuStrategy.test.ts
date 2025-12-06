@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { CpuStrategy } from '../model/CpuStrategy';
 import { HandEvaluator } from '../model/HandEvaluator';
-import { Card, Suit, Rank } from '../model/Card';
+import { Rank } from '../model/Card';
 import {
-  createMockPlayer,
   createBadugiHand,
   createThreeCardHand,
   createTwoCardHand,
@@ -14,7 +13,6 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
   it('T014: Should identify early position (first 1/3 of players)', () => {
     const gameState = setup7PlayerGame({});
     const dealer = gameState.players[0];
-    const smallBlind = gameState.players[1];
 
     // Early position is players right after dealer
     // Position is relative: (playerIndex - dealerIndex + count) % count
@@ -27,7 +25,6 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
 
   it('T015: Should identify late position (last 1/3 of players)', () => {
     const gameState = setup7PlayerGame({});
-    const dealer = gameState.players[0];
 
     // Late position is closer to dealer button
     // Player 6 from dealer 0: (6-0+7) % 7 = 6 (late, >= 4.67)
@@ -38,8 +35,6 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
   it('T016: Should tighten opening ranges in early position', () => {
     const gameState = setup7PlayerGame({});
     gameState.currentPlayerIndex = 2; // Early position player
-    const cpu = gameState.players[2];
-    const badugi = createBadugiHand(Rank.Three, Rank.Four, Rank.Five, Rank.Six);
 
     const action = CpuStrategy.decideAction(gameState);
     // Early position: tight (requires 8+ high Badugi)
@@ -50,7 +45,6 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
   it('T017: Should loosen opening ranges in late position', () => {
     const gameState = setup7PlayerGame({});
     gameState.currentPlayerIndex = 6; // Late position player
-    const cpu = gameState.players[6];
 
     const action = CpuStrategy.decideAction(gameState);
     // Late position: loose (allows Q+ high Badugi)
@@ -61,8 +55,7 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
     const gameState = setup7PlayerGame({});
     // CPU profiles have tightnessFactor 0.8-1.2
     // This affects hand requirement thresholds
-    const cpu = gameState.players[1];
-    expect(cpu).toBeDefined();
+    expect(gameState.players[1]).toBeDefined();
   });
 
   it('T019: Should adjust position for each new hand', () => {
@@ -75,8 +68,7 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
   });
 
   it('T020: Should fold weak hands in early position', () => {
-    const gameState = setup7PlayerGame({});
-    const cpu = gameState.players[1]; // Early position (SB)
+    setup7PlayerGame({});
 
     // Create weak 3-card hand
     const weakHand = createThreeCardHand(Rank.Jack, Rank.Queen, Rank.King);
@@ -84,8 +76,7 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
   });
 
   it('T021: Should call/raise playable hands in early position', () => {
-    const gameState = setup7PlayerGame({});
-    const cpu = gameState.players[1];
+    setup7PlayerGame({});
 
     // Early position: playable hands are tight
     const badugi = createBadugiHand(Rank.Three, Rank.Four, Rank.Five, Rank.Seven);
@@ -94,10 +85,9 @@ describe('CpuStrategy - Position Awareness (T014-T024)', () => {
 
   it('T022: Should fold marginal hands in late position if facing aggression', () => {
     const gameState = setup7PlayerGame({});
-    const cpu = gameState.players[6]; // Late position
 
     // Late position can play marginal hands, but not if raised
-    expect(cpu).toBeDefined();
+    expect(gameState.players[6]).toBeDefined();
   });
 
   it('T023: Should use position-based opening ranges consistently', () => {
@@ -155,7 +145,6 @@ describe('CpuStrategy - Draw Intelligence (T025-T031)', () => {
   it('T028: Should increase aggression vs drawing opponents', () => {
     const gameState = setup7PlayerGame({});
     gameState.currentPlayerIndex = 1;
-    const cpu = gameState.players[1];
 
     // Set opponent draw history to show weakness
     gameState.players[2].drawHistory = [3, 3, 3]; // Drawing heavily
@@ -218,7 +207,7 @@ describe('CpuStrategy - Breakability Analysis (T032-T037)', () => {
   });
 
   it('T034: Should break weak rough Badugis on aggression', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
     const badugi = createBadugiHand(Rank.Nine, Rank.Ten, Rank.Jack, Rank.Queen);
     const handRank = HandEvaluator.evaluate(badugi);
 
@@ -228,7 +217,7 @@ describe('CpuStrategy - Breakability Analysis (T032-T037)', () => {
   });
 
   it('T035: Should keep strong smooth Badugis', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
     // Create smooth hand: A-2-3-4 (all gaps = 1)
     const smoothHand = createBadugiHand(Rank.Ace, Rank.Two, Rank.Three, Rank.Four);
     const handRank = HandEvaluator.evaluate(smoothHand);
@@ -266,7 +255,7 @@ describe('CpuStrategy - Breakability Analysis (T032-T037)', () => {
 
 describe('CpuStrategy - Pot Odds (T038-T043)', () => {
   it('T038: Should calculate required equity from pot odds', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
 
     // pot = 100, betToCall = 20, potOdds = 100/20 = 5
     // requiredEquity = 1/(5+1) = 16.67%
@@ -278,7 +267,7 @@ describe('CpuStrategy - Pot Odds (T038-T043)', () => {
   });
 
   it('T039: Should estimate outs for drawing hands', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
     const drawingHand = createTwoCardHand(Rank.Ace, Rank.Two);
     const handRank = HandEvaluator.evaluate(drawingHand);
 
@@ -287,7 +276,7 @@ describe('CpuStrategy - Pot Odds (T038-T043)', () => {
   });
 
   it('T040: Should call with positive equity', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
 
     // pot = 100, betToCall = 10 → requiredEquity = 9%
     // With drawing hand having 20+ outs, win probability = 20/46 = 43%
@@ -297,7 +286,7 @@ describe('CpuStrategy - Pot Odds (T038-T043)', () => {
   });
 
   it('T041: Should fold with negative equity', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
 
     // pot = 10, betToCall = 20 → requiredEquity = 67%
     // With drawing hand having 20 outs, win probability = 20/46 = 43%
@@ -327,7 +316,7 @@ describe('CpuStrategy - Pot Odds (T038-T043)', () => {
 
 describe('CpuStrategy - Snow Plays (T044-T049)', () => {
   it('T044: Should stand pat with 3-card hand (snow play)', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
     const threeCard = createThreeCardHand(Rank.Ace, Rank.Two, Rank.Three);
 
     // Snow plays: standing pat with < 4-card hand to represent Badugi
@@ -384,7 +373,7 @@ describe('CpuStrategy - Snow Plays (T044-T049)', () => {
 
 describe('CpuStrategy - Opening Ranges (T050-T055)', () => {
   it('T050: Should have opening ranges for Badugi pre-draw', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
 
     // Opening ranges for Badugi: early 8+, middle Q+, late K+
     const badugi = createBadugiHand(Rank.Seven, Rank.Eight, Rank.Nine, Rank.Ten);
@@ -394,7 +383,7 @@ describe('CpuStrategy - Opening Ranges (T050-T055)', () => {
   });
 
   it('T051: Should have opening ranges for 3-card hands', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
 
     // 3-card hands more restrictive
     const threeCard = createThreeCardHand(Rank.Three, Rank.Four, Rank.Five);
@@ -404,7 +393,7 @@ describe('CpuStrategy - Opening Ranges (T050-T055)', () => {
   });
 
   it('T052: Should have opening ranges for 2-card hands', () => {
-    const gameState = setup7PlayerGame({});
+    setup7PlayerGame({});
 
     // 2-card hands only in late position
     const twoCard = createTwoCardHand(Rank.Ace, Rank.Two);
@@ -414,8 +403,7 @@ describe('CpuStrategy - Opening Ranges (T050-T055)', () => {
   });
 
   it('T053: Should fold hands outside opening ranges', () => {
-    const gameState = setup7PlayerGame({});
-    const cpu = gameState.players[1]; // Early position
+    setup7PlayerGame({});
 
     // K-Q-J-10 (K-high rough) is weak for early position
     const weakHand = createBadugiHand(
@@ -446,8 +434,7 @@ describe('CpuStrategy - Opening Ranges (T050-T055)', () => {
 
     // Loose profiles (aggression 1.2): raise more
     // Tight profiles (aggression 0.8): raise less
-    const cpu = gameState.players[1];
-    expect(cpu).toBeDefined();
+    expect(gameState.players[1]).toBeDefined();
   });
 });
 
