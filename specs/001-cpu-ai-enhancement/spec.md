@@ -5,6 +5,11 @@
 **Status**: Draft  
 **Input**: User description: "CPUのAIの行動強化。現状のCPUはあまり良い出来とは言えない。Webからbadugiの戦略を調べ現在のCPUに組み込んでください"
 
+## Clarifications
+
+### Session 2025-12-06
+- Q: SC-008の測定方法（主観的「ゲーム感」をどう定量化するか） → A: SC-001～007の達成で自動的に達成とする（他指標紐付け）
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Position-Aware CPU Betting (Priority: P1)
@@ -163,7 +168,7 @@ CPU makes pre-draw decisions based on starting hand strength charts: strong 3-ca
 
 - **SC-007**: CPU demonstrates breakability understanding by correctly breaking rough badugis (9-high+) when facing aggression in 70%+ of applicable scenarios
 
-- **SC-008**: Human player satisfaction improves based on game feeling more challenging and realistic (subjective, but measurable through playtesting feedback)
+- **SC-008**: Implementation success verified by SC-001～SC-007 all passing; when all technical criteria met, game objectively feels more challenging due to improved CPU strategy
 
 ## Assumptions
 

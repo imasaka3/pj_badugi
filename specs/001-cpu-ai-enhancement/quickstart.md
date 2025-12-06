@@ -422,21 +422,46 @@ export class CpuStrategy {
 
 ## Testing Checklist
 
-### Unit Testing (Manual)
+### Automated Unit Tests (Vitest)
 
-1. **Position awareness**: Play 50+ hands, verify CPUs fold more from early position
-2. **Draw tracking**: Check console logs show CPUs react to opponent draws
-3. **Breakability**: Observe CPUs with 9-10 high badugis break when facing aggression
-4. **Snow plays**: Track ~15-20% of weak hands standing pat and betting
-5. **Opening ranges**: Verify CPUs fold weak hands from early position pre-draw
-6. **Pot odds**: Check CPUs call with drawing hands when pot odds are favorable
+With Vitest framework now available, the following can be automated:
 
-### Integration Testing
+1. **Position awareness** (SC-001): 
+   - Test `getPositionCategory()` returns correct tier for each position
+   - Verify opening ranges vary by position (tight early, loose late)
 
-1. Play full tournament (until elimination or 100+ hands)
-2. Verify no crashes or infinite loops
-3. Check CPU win rate improves to ~45-55% range
-4. Confirm game feels more challenging
+2. **Draw tracking** (SC-002):
+   - Test `drawHistory` initialization in `startHand()`
+   - Verify draw counts recorded correctly in `draw()` and `standPat()`
+
+3. **Breakability calculation** (SC-007):
+   - Test `calculateBreakability()` returns score 0-91
+   - Verify `shouldBreakBadugi()` logic with mock game states
+
+4. **Snow plays** (SC-004):
+   - Test `shouldSnow()` returns true ~15-20% of time
+   - Verify snow only triggered after Draw2 with 3-card hands
+
+5. **Opening ranges** (SC-005):
+   - Test `decidePreDrawAction()` against `OPENING_RANGES` lookup
+   - Verify fold/call/raise decisions match position and hand type
+
+6. **Pot odds** (SC-003 & SC-006):
+   - Test `checkPotOdds()` with various pot/bet/outs combinations
+   - Verify equity calculations correct
+
+### Manual Integration Tests
+
+1. Play 50+ hands and verify CPUs fold more from early position
+2. Play 100+ hands tournament and track CPU win rate (SC-002 target: 45-55%)
+3. Verify no crashes or infinite loops during tournament play
+4. Confirm game feels more challenging than before
+
+### Test Success Criteria
+
+All 8 success criteria can be verified through combination of Vitest unit tests + manual integration testing:
+- **SC-001 through SC-007**: Automated via targeted unit tests
+- **SC-008**: Automatically satisfied when SC-001～007 all pass
 
 ## Common Pitfalls
 
