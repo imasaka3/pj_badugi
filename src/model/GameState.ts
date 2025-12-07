@@ -29,6 +29,7 @@ export interface Player {
     hasFolded: boolean;
     isAllIn: boolean;
     lastAction: string | null;
+    drawHistory: number[]; // [draw1, draw2, draw3] - cards discarded in each draw phase
 }
 
 export interface ActionLog {
@@ -79,7 +80,7 @@ export class GameState {
         this.tournament = tournament;
         this.deck = new Deck();
         this.players = [
-            { id: 'p1', name: 'You', isCpu: false, chips: StartStack, hand: [], currentRoundBet: 0, hasFolded: false, isAllIn: false, lastAction: null }
+            { id: 'p1', name: 'You', isCpu: false, chips: StartStack, hand: [], currentRoundBet: 0, hasFolded: false, isAllIn: false, lastAction: null, drawHistory: [0, 0, 0] }
         ];
         // Add 6 CPU players
         for (let i = 1; i <= 6; i++) {
@@ -92,7 +93,8 @@ export class GameState {
                 currentRoundBet: 0,
                 hasFolded: false,
                 isAllIn: false,
-                lastAction: null
+                lastAction: null,
+                drawHistory: [0, 0, 0],
             });
         }
 
@@ -134,6 +136,7 @@ export class GameState {
             p.currentRoundBet = 0;
             p.isAllIn = false;
             p.lastAction = null;
+            p.drawHistory = [0, 0, 0]; // Initialize draw tracking
         }
 
         // Initialize Log
@@ -315,6 +318,13 @@ export class GameState {
 
     draw(cardsToDiscard: Card[]) {
         const player = this.getCurrentPlayer();
+        
+        // Record draw count for strategy tracking
+        const drawCount = cardsToDiscard.length;
+        if (this.phase === GamePhase.Draw1) player.drawHistory[0] = drawCount;
+        else if (this.phase === GamePhase.Draw2) player.drawHistory[1] = drawCount;
+        else if (this.phase === GamePhase.Draw3) player.drawHistory[2] = drawCount;
+        
         // Remove discarded cards
         player.hand = player.hand.filter(c => !cardsToDiscard.includes(c));
         // Deal new cards
@@ -328,6 +338,12 @@ export class GameState {
 
     standPat() {
         const player = this.getCurrentPlayer();
+        
+        // Record standing pat as 0 draws
+        if (this.phase === GamePhase.Draw1) player.drawHistory[0] = 0;
+        else if (this.phase === GamePhase.Draw2) player.drawHistory[1] = 0;
+        else if (this.phase === GamePhase.Draw3) player.drawHistory[2] = 0;
+        
         player.lastAction = 'Stand Pat';
         this.logAction(player, 'Stand Pat');
         this.advanceTurn();

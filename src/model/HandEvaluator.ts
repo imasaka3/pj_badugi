@@ -9,6 +9,12 @@ export const HandType = {
 
 export type HandType = typeof HandType[keyof typeof HandType];
 
+export interface BreakabilityScore {
+    score: number;           // 0-91: higher score = more breakable
+    breakableCard: Card | null; // Highest card to break
+    improveRanks: Rank[];    // Ranks that improve hand
+}
+
 export class HandRank {
     public readonly type: HandType;
     public readonly cards: Card[];
@@ -107,5 +113,63 @@ export class HandEvaluator {
             ranks.add(card.rank);
         }
         return true;
+    }
+
+    /**
+     * Calculate breakability of a Badugi hand (how easily it can be improved).
+     * Score ranges 0-91:
+     * - 0: Not a Badugi or cannot be broken
+     * - 1-30: Low breakability (strong hand, limited improvements)
+     * - 31-60: Moderate breakability (marginal Badugi)
+     * - 61-91: High breakability (weak Badugi, many improvements possible)
+     */
+    static calculateBreakability(_hand: Card[], badugiRank: HandRank): BreakabilityScore {
+        if (badugiRank.type !== HandType.Badugi) {
+            return { score: 0, breakableCard: null, improveRanks: [] };
+        }
+
+        const usedRanks = new Set(badugiRank.cards.map(c => c.rank));
+
+        // Highest card is most breakable
+        const sortedCards = [...badugiRank.cards].sort((a, b) => b.rank - a.rank);
+        const breakableCard = sortedCards[0] ?? null;
+
+        // Calculate score from non-pairing ranks
+        const improveRanks: Rank[] = [];
+        let score = 0;
+
+        for (let rank = 1; rank <= 13; rank++) {
+            if (!usedRanks.has(rank as Rank)) {
+                improveRanks.push(rank as Rank);
+                score += (14 - rank); // Lower ranks more valuable (A=13, K=1)
+            }
+        }
+
+        // Normalize to 0-91 range
+        score = Math.min(91, Math.max(0, score));
+
+        return { score, breakableCard, improveRanks };
+    }
+
+    /**
+     * Check if a hand is "smooth" (low gaps between ranks).
+     * Smooth hands are preferred over rough hands in Badugi.
+     * 
+     * Example:
+     * - Smooth: A-2-3-4 (gaps: 1,1,1, avg=1)
+     * - Rough: A-5-9-K (gaps: 4,4,3, avg=3.67)
+     */
+    static isSmooth(handRank: HandRank): boolean {
+        if (handRank.cards.length < 2) return false;
+
+        const sortedRanks = handRank.cards.map(c => c.rank).sort((a, b) => a - b);
+        let totalGap = 0;
+
+        for (let i = 1; i < sortedRanks.length; i++) {
+            totalGap += sortedRanks[i] - sortedRanks[i - 1];
+        }
+
+        const avgGap = totalGap / (sortedRanks.length - 1);
+        return avgGap <= 3; // Smooth if average gap <= 3
     }
 }
