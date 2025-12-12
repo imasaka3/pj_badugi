@@ -30,8 +30,9 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 // Request landscape orientation lock on mobile devices
-if (screen.orientation && screen.orientation.lock) {
-  screen.orientation.lock('landscape').catch((err) => {
+if (screen.orientation && 'lock' in screen.orientation) {
+  const orientation = screen.orientation as ScreenOrientation & { lock: (orientation: string) => Promise<void> };
+  orientation.lock('landscape').catch((err: unknown) => {
     console.log('Orientation lock not supported or failed:', err);
   });
 }
