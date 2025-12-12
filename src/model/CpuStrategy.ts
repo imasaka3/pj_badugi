@@ -110,6 +110,14 @@ export class CpuStrategy {
     return this.decidePostDrawAction(gameState, cpu, handRank, position, profile);
   }
 
+  /**
+   * Calculate raise probability based on CPU aggression factor.
+   * Original range 0.8-1.2 maps to 0.0-0.8 probability range.
+   */
+  private static calculateRaiseProbability(profile: StrategyProfile): number {
+    return Math.max(0.0, Math.min(0.8, (profile.aggressionFactor - 0.8) / 0.5));
+  }
+
   private static decidePreDrawAction(
     gameState: GameState,
     _cpu: Player,
@@ -135,9 +143,8 @@ export class CpuStrategy {
       return 'Fold';
     }
 
-    // Normalize aggressionFactor to 0-1 probability range
-    // Original range 0.8-1.2 maps to 0.0-0.8 (prevents always raising)
-    const raiseProbability = Math.max(0.0, Math.min(0.9, (profile.aggressionFactor - 0.8) / 0.5));
+    // Check if we should raise based on aggression profile
+    const raiseProbability = this.calculateRaiseProbability(profile);
     
     if (criteria.action === 'raise' && Math.random() < raiseProbability) {
       if (gameState.betsInRound < 5) return 'Raise';
@@ -163,9 +170,7 @@ export class CpuStrategy {
 
       // Premium hands (Eight or better) should bet/raise aggressively
       if (highCard <= Rank.Eight) {
-        // Normalize aggressionFactor to 0-1 probability
-        // Original range 0.8-1.2 maps to 0.0-0.8 (prevents always raising)
-        const raiseProbability = Math.max(0.0, Math.min(0.9, (profile.aggressionFactor - 0.8) / 0.5));
+        const raiseProbability = this.calculateRaiseProbability(profile);
         
         if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
           return 'Raise';
