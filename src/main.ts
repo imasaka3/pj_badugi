@@ -13,7 +13,7 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'app',
   backgroundColor: '#1a1a1a',
   scale: {
-    mode: Phaser.Scale.ENVELOP,
+    mode: Phaser.Scale.FIT, // Changed from ENVELOP to FIT to ensure entire canvas is visible
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 1280,
     height: 720
