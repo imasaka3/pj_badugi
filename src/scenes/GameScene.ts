@@ -56,8 +56,8 @@ export class GameScene extends Phaser.Scene {
         const { width, height } = this.scale;
         this.add.rectangle(0, 0, width, height, 0x2c3e50).setOrigin(0);
 
-        // Table
-        this.add.ellipse(width / 2, height / 2, width * 0.8, height * 0.6, 0x27ae60);
+        // Table - moved up and made slightly narrower vertically
+        this.add.ellipse(width / 2, height / 2 - 30, width * 0.8, height * 0.55, 0x27ae60);
 
         // Player Areas
         // 7 Players. P1 (User) at bottom (index 0).
@@ -66,9 +66,9 @@ export class GameScene extends Phaser.Scene {
         // Let's distribute evenly on ellipse.
 
         const centerX = width / 2;
-        const centerY = height / 2;
+        const centerY = height / 2 - 30; // Moved table up to provide more bottom spacing
         const radiusX = width * 0.35;
-        const radiusY = height * 0.25;
+        const radiusY = height * 0.22; // Reduced vertical radius to bring players closer
 
         // Angles for 7 players. P1 at 90 degrees (bottom).
         // 0 is right. 90 is bottom.
@@ -97,8 +97,8 @@ export class GameScene extends Phaser.Scene {
     private createUI() {
         const { width, height } = this.scale;
 
-        this.potText = this.add.text(width / 2, height / 2, 'Pot: 0', { fontSize: '32px', color: '#fff' }).setOrigin(0.5);
-        this.infoText = this.add.text(width / 2, height / 2 - 40, '', { fontSize: '20px', color: '#ffff00' }).setOrigin(0.5);
+        this.potText = this.add.text(width / 2, height / 2 - 30, 'Pot: 0', { fontSize: '32px', color: '#fff' }).setOrigin(0.5);
+        this.infoText = this.add.text(width / 2, height / 2 - 70, '', { fontSize: '20px', color: '#ffff00' }).setOrigin(0.5);
         this.phaseText = this.add.text(20, 20, '', { fontSize: '24px', color: '#fff' });
         this.timerText = this.add.text(width - 150, 20, 'Time: 30', { fontSize: '32px', color: '#fff' });
 
@@ -108,7 +108,7 @@ export class GameScene extends Phaser.Scene {
 
     private createActionButtons() {
         const { width, height } = this.scale;
-        const buttonY = height - 50;
+        const buttonY = height - 120; // Moved higher to avoid being cut off by browser UI
         const buttonWidth = 120;
         const spacing = 20;
         const startX = width / 2 - (buttonWidth * 2 + spacing * 1.5);
