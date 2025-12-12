@@ -171,7 +171,7 @@ export class CpuStrategy {
       // Value betting strategy based on hand strength
       // Premium hands (Seven or better): Almost always bet/raise
       if (highCard <= Rank.Seven) {
-        const raiseProbability = 0.85 + (profile.aggressionFactor - 1.0) * 0.15;
+        const raiseProbability = Math.max(0.0, Math.min(1.0, 0.85 + (profile.aggressionFactor - 1.0) * 0.15));
         
         if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
           return 'Raise';
@@ -182,7 +182,7 @@ export class CpuStrategy {
       // Good hands (Eight-Nine high): Frequently bet/raise for value
       if (highCard <= Rank.Nine) {
         const baseRaiseProbability = highCard === Rank.Eight ? 0.70 : 0.55;
-        const raiseProbability = baseRaiseProbability + (profile.aggressionFactor - 1.0) * 0.20;
+        const raiseProbability = Math.max(0.0, Math.min(1.0, baseRaiseProbability + (profile.aggressionFactor - 1.0) * 0.20));
         
         if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
           return 'Raise';
@@ -195,6 +195,8 @@ export class CpuStrategy {
         // Check opponent strength signals
         const opponents = gameState.players.filter(p => p.id !== cpu.id && !p.hasFolded);
         const strongOpponents = opponents.filter(opp => {
+          // Safe array access - check if drawHistory exists and has elements
+          if (!opp.drawHistory || opp.drawHistory.length === 0) return false;
           const lastDraw = opp.drawHistory[opp.drawHistory.length - 1];
           return lastDraw === 0; // Standing pat = strong
         }).length;
@@ -202,7 +204,7 @@ export class CpuStrategy {
         // Bet less often against strong opponents
         const baseRaiseProbability = highCard === Rank.Ten ? 0.40 : 0.25;
         const adjustedProbability = Math.max(0.10, baseRaiseProbability - (strongOpponents * 0.15));
-        const raiseProbability = adjustedProbability + (profile.aggressionFactor - 1.0) * 0.15;
+        const raiseProbability = Math.max(0.0, Math.min(1.0, adjustedProbability + (profile.aggressionFactor - 1.0) * 0.15));
         
         if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
           return 'Raise';

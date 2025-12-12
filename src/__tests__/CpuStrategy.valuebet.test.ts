@@ -149,8 +149,6 @@ describe('CpuStrategy - Value Betting with Completed Badugis', () => {
   });
 
   it('Should value bet across all post-draw betting phases (Betting2, Betting3, Betting4)', () => {
-    const cpu = { id: 'cpu1', name: 'CPU 1', isCpu: true };
-    
     // Test each post-draw betting phase
     const phases = [GamePhase.Betting2, GamePhase.Betting3, GamePhase.Betting4];
     
