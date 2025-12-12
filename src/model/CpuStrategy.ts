@@ -168,9 +168,10 @@ export class CpuStrategy {
     if (handRank.type === HandType.Badugi) {
       const highCard = getHighestRank(handRank);
 
-      // Premium hands (Eight or better) should bet/raise aggressively
-      if (highCard <= Rank.Eight) {
-        const raiseProbability = this.calculateRaiseProbability(profile);
+      // Value betting strategy based on hand strength
+      // Premium hands (Seven or better): Almost always bet/raise
+      if (highCard <= Rank.Seven) {
+        const raiseProbability = 0.85 + (profile.aggressionFactor - 1.0) * 0.15;
         
         if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
           return 'Raise';
@@ -178,7 +179,38 @@ export class CpuStrategy {
         return 'Call';
       }
 
-      // For weaker Badugis (Nine+), check if we should break or just call
+      // Good hands (Eight-Nine high): Frequently bet/raise for value
+      if (highCard <= Rank.Nine) {
+        const baseRaiseProbability = highCard === Rank.Eight ? 0.70 : 0.55;
+        const raiseProbability = baseRaiseProbability + (profile.aggressionFactor - 1.0) * 0.20;
+        
+        if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
+          return 'Raise';
+        }
+        return 'Call';
+      }
+
+      // Medium hands (Ten-Jack high): Selective value betting
+      if (highCard <= Rank.Jack) {
+        // Check opponent strength signals
+        const opponents = gameState.players.filter(p => p.id !== cpu.id && !p.hasFolded);
+        const strongOpponents = opponents.filter(opp => {
+          const lastDraw = opp.drawHistory[opp.drawHistory.length - 1];
+          return lastDraw === 0; // Standing pat = strong
+        }).length;
+
+        // Bet less often against strong opponents
+        const baseRaiseProbability = highCard === Rank.Ten ? 0.40 : 0.25;
+        const adjustedProbability = Math.max(0.10, baseRaiseProbability - (strongOpponents * 0.15));
+        const raiseProbability = adjustedProbability + (profile.aggressionFactor - 1.0) * 0.15;
+        
+        if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
+          return 'Raise';
+        }
+        return 'Call';
+      }
+
+      // Weak Badugis (Queen+ high): Check breakability and be cautious
       const breakability = HandEvaluator.calculateBreakability(cpu.hand, handRank);
       if (this.shouldBreakBadugi(gameState, cpu, handRank, breakability)) {
         // If facing strong opponents, be cautious with weak Badugi
