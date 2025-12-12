@@ -161,6 +161,14 @@ export class CpuStrategy {
     _position: PositionCategory,
     profile: StrategyProfile
   ): string {
+    // Auto-bet strategy: If CPU drew fewer cards than all active opponents, bet/raise
+    if (this.shouldAutoBet(gameState, cpu)) {
+      if (gameState.betsInRound < 5) {
+        return 'Raise';
+      }
+      return 'Call';
+    }
+
     if (this.shouldSnow(gameState, cpu, handRank, profile)) {
       return 'Call';
     }
@@ -236,6 +244,41 @@ export class CpuStrategy {
     }
 
     return 'Call';
+  }
+
+  private static shouldAutoBet(
+    gameState: GameState,
+    cpu: Player
+  ): boolean {
+    // Only apply auto-bet in post-draw betting rounds
+    if (gameState.phase < GamePhase.Betting2) return false;
+
+    // Determine which draw round we're evaluating
+    let drawIndex: number;
+    if (gameState.phase === GamePhase.Betting2) {
+      drawIndex = 0; // After Draw1
+    } else if (gameState.phase === GamePhase.Betting3) {
+      drawIndex = 1; // After Draw2
+    } else if (gameState.phase === GamePhase.Betting4) {
+      drawIndex = 2; // After Draw3
+    } else {
+      return false;
+    }
+
+    // Get CPU's draw count for this round
+    const cpuDrawCount = cpu.drawHistory[drawIndex];
+
+    // Get active opponents
+    const opponents = gameState.players.filter(p => p.id !== cpu.id && !p.hasFolded);
+    if (opponents.length === 0) return false;
+
+    // Check if CPU drew fewer cards than ALL active opponents
+    const drewFewerThanAll = opponents.every(opp => {
+      const oppDrawCount = opp.drawHistory[drawIndex];
+      return cpuDrawCount < oppDrawCount;
+    });
+
+    return drewFewerThanAll;
   }
 
   private static shouldSnow(
