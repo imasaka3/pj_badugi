@@ -122,7 +122,12 @@ export class CpuStrategy {
 
     const highCard = getHighestRank(handRank);
 
-    if (highCard > criteria.maxHighCard * profile.tightnessFactor) {
+    // Apply tightnessFactor as a threshold adjustment
+    // tightnessFactor > 1.0 = tighter (lower threshold)
+    // tightnessFactor < 1.0 = looser (higher threshold)
+    const adjustedMaxHighCard = Math.floor(criteria.maxHighCard / profile.tightnessFactor);
+    
+    if (highCard > adjustedMaxHighCard) {
       return 'Fold';
     }
 
@@ -130,7 +135,11 @@ export class CpuStrategy {
       return 'Fold';
     }
 
-    if (criteria.action === 'raise' && Math.random() < profile.aggressionFactor) {
+    // Normalize aggressionFactor to 0-1 probability range
+    // Original range 0.8-1.2 maps to 0.0-0.8 (prevents always raising)
+    const raiseProbability = Math.max(0.0, Math.min(0.9, (profile.aggressionFactor - 0.8) / 0.5));
+    
+    if (criteria.action === 'raise' && Math.random() < raiseProbability) {
       if (gameState.betsInRound < 5) return 'Raise';
       return 'Call';
     }
@@ -152,21 +161,35 @@ export class CpuStrategy {
     if (handRank.type === HandType.Badugi) {
       const highCard = getHighestRank(handRank);
 
+      // Premium hands (Eight or better) should bet/raise aggressively
       if (highCard <= Rank.Eight) {
-        if (gameState.betsInRound < 5 && Math.random() < profile.aggressionFactor) {
+        // Normalize aggressionFactor to 0-1 probability
+        // Original range 0.8-1.2 maps to 0.0-0.8 (prevents always raising)
+        const raiseProbability = Math.max(0.0, Math.min(0.9, (profile.aggressionFactor - 0.8) / 0.5));
+        
+        if (gameState.betsInRound < 5 && Math.random() < raiseProbability) {
           return 'Raise';
         }
         return 'Call';
       }
 
+      // For weaker Badugis (Nine+), check if we should break or just call
       const breakability = HandEvaluator.calculateBreakability(cpu.hand, handRank);
       if (this.shouldBreakBadugi(gameState, cpu, handRank, breakability)) {
+        // If facing strong opponents, be cautious with weak Badugi
+        const betToCall = gameState.currentBet - cpu.currentRoundBet;
+        if (betToCall > 0) {
+          // Consider folding if pot odds are bad
+          const potOdds = gameState.pot / betToCall;
+          if (potOdds < 2) return 'Fold';
+        }
         return 'Call';
       }
 
       return 'Call';
     }
 
+    // Drawing hands (3-card, 2-card, 1-card)
     if (handRank.type < HandType.Badugi) {
       const outs = this.estimateOuts(handRank);
       const shouldCall = this.checkPotOdds(gameState, cpu, outs);
@@ -226,10 +249,19 @@ export class CpuStrategy {
     const potOdds = gameState.pot / betToCall;
     const activePlayers = gameState.players.filter(p => !p.hasFolded).length;
     const cardsRemaining = 52 - (4 * activePlayers);
-    const winProbability = outs / cardsRemaining;
+    
+    // Estimate win probability based on outs
+    // For drawing hands, we need to improve AND win
+    // Conservative estimate: divide outs by remaining cards
+    const improveProbability = Math.min(1.0, outs / Math.max(1, cardsRemaining));
+    
+    // Required equity to call
     const requiredEquity = 1 / (potOdds + 1);
-
-    return winProbability >= requiredEquity;
+    
+    // Add a safety margin for drawing hands (they need to improve AND beat opponents)
+    const adjustedWinProbability = improveProbability * 0.7; // 70% of improve probability
+    
+    return adjustedWinProbability >= requiredEquity;
   }
 
   private static estimateOuts(handRank: HandRank): number {
