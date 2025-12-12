@@ -246,6 +246,21 @@ export class CpuStrategy {
     return 'Call';
   }
 
+  /**
+   * Determines if CPU should auto-bet based on draw count comparison.
+   * 
+   * Strategy: If CPU drew fewer cards than ALL active opponents in the most recent
+   * draw round, this indicates a stronger hand and triggers an automatic bet/raise.
+   * 
+   * @param gameState - Current game state
+   * @param cpu - Current CPU player making the decision
+   * @returns true if CPU should auto-bet, false otherwise
+   * 
+   * Conditions for auto-bet:
+   * - Must be in a post-draw betting round (Betting2, Betting3, or Betting4)
+   * - CPU's draw count must be strictly less than ALL active opponents
+   * - Draw histories must be properly initialized
+   */
   private static shouldAutoBet(
     gameState: GameState,
     cpu: Player
@@ -265,6 +280,11 @@ export class CpuStrategy {
       return false;
     }
 
+    // Validate CPU's draw history exists and has the required index
+    if (!cpu.drawHistory || cpu.drawHistory.length <= drawIndex) {
+      return false;
+    }
+
     // Get CPU's draw count for this round
     const cpuDrawCount = cpu.drawHistory[drawIndex];
 
@@ -274,6 +294,10 @@ export class CpuStrategy {
 
     // Check if CPU drew fewer cards than ALL active opponents
     const drewFewerThanAll = opponents.every(opp => {
+      // Validate opponent's draw history
+      if (!opp.drawHistory || opp.drawHistory.length <= drawIndex) {
+        return false; // Cannot determine, so don't auto-bet
+      }
       const oppDrawCount = opp.drawHistory[drawIndex];
       return cpuDrawCount < oppDrawCount;
     });
