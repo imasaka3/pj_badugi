@@ -29,4 +29,11 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [BootScene, MenuScene, GameScene, LogListScene, LogDetailScene]
 };
 
+// Request landscape orientation lock on mobile devices
+if (screen.orientation && screen.orientation.lock) {
+  screen.orientation.lock('landscape').catch((err) => {
+    console.log('Orientation lock not supported or failed:', err);
+  });
+}
+
 new Phaser.Game(config);
