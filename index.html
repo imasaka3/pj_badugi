@@ -7,6 +7,9 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="screen-orientation" content="landscape" />
+    <meta name="x5-orientation" content="landscape" />
+    <meta name="x5-fullscreen" content="true" />
     <title>Badugi Poker</title>
     <style>
       body {
@@ -31,9 +34,55 @@
         align-items: center;
         touch-action: manipulation;
       }
+      /* Rotation prompt overlay for portrait mode */
+      #rotation-prompt {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.95);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      #rotation-prompt .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        animation: rotate 2s ease-in-out infinite;
+      }
+      #rotation-prompt .text {
+        font-size: 24px;
+        text-align: center;
+        padding: 0 20px;
+      }
+      @keyframes rotate {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(90deg); }
+      }
+      /* Show rotation prompt on portrait mode */
+      @media (orientation: portrait) {
+        #rotation-prompt {
+          display: flex !important;
+        }
+        #app {
+          display: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <div id="rotation-prompt">
+      <div class="icon">📱</div>
+      <div class="text">
+        横向きにしてプレイしてください<br>
+        Please rotate your device to landscape mode
+      </div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
